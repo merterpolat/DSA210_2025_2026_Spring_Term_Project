@@ -1,1 +1,1 @@
-print("ilk commit")
+print("ilk commit düzgün mesajla")
