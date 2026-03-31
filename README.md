@@ -1,6 +1,6 @@
 # Quantitative Analysis of Grappling and Striking Metrics on Win Probabilities in UFC
 
-## 🎯 Motivation and Problem Definition
+## Motivation and Problem Definition
 The objective of this project is to investigate the statistical impact of different combat disciplines—specifically **grappling** and **striking**—on victory outcomes in the Ultimate Fighting Championship (UFC). 
 
 While MMA is a blend of styles, there is a continuous debate on which skill set is a better predictor of success. This project will quantitatively analyze whether:
@@ -11,7 +11,7 @@ By analyzing historical performance data, the goal is to uncover the underlying 
 
 ---
 
-## 📊 Data Source and Collection
+## Data Source and Collection
 The primary data is sourced from the **UFC Fight Historical Data** (scraped from the official UFC database).
 
 * **`data.csv`**: Contains fight-by-fight metrics.
@@ -20,7 +20,7 @@ The primary data is sourced from the **UFC Fight Historical Data** (scraped from
 
 ---
 
-## 🔍 Data Characteristics
+##  Data Characteristics
 The dataset is comprehensive, containing over **5,000 unique fight observations** spanning from 1993 to 2021, featuring more than **140 variables**.
 
 ### Key Performance Indicators (KPIs):
@@ -33,7 +33,7 @@ The dataset is comprehensive, containing over **5,000 unique fight observations*
 
 ---
 
-## 🛠️ Planned Methodology
+## Planned Methodology
 The project will follow a structured data science workflow:
 
 1.  **Exploratory Data Analysis (EDA):** Visualizing win ratios based on performance metrics to identify initial trends.
