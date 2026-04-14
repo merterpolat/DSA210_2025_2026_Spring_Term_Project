@@ -1,0 +1,210 @@
+QUESTION 1:
+
+I have a data science project that and my project is about the anaylsis of the ufc fighters and look up to the grappling efficiency and striking efficiency and test the dominance between these 2 combat pillars and determine which has a stronger correlation with winning a fight and in this phase my goal will be : Data collection, EDA and hypothesis tests  which approach I can use I know how to implament the hypothesis testing policies and t test properties but Which EDA methods can I use ? Can you give some examples in school we covered the concepts of EDA which as : Raw Data Inspection, descriptive statistics, aggregation, data Visualization are they good for this project ?
+
+
+The EDA methods you listed are absolutely solid foundations, and yes — they're all relevant for this project. Let me map each one to your specific UFC context and then add a few more that will be especially powerful for a **comparative dominance analysis** between grappling and striking.
+
+---
+
+## Your Existing Methods — Applied to UFC
+
+### 1. Raw Data Inspection
+For UFC data this means checking:
+- Missing values in grappling stats (takedown attempts, submissions) vs striking stats (significant strikes, accuracy %)
+- Outliers — fighters with 0 takedown attempts skew grappling efficiency metrics
+- Data types and consistency (is "win" encoded as binary? Is it split by decision/KO/submission?)
+
+### 2. Descriptive Statistics
+Calculate mean, median, std, min/max for both pillars separately:
+- **Striking:** sig. strikes landed per minute (SLpM), striking accuracy %, striking defense %
+- **Grappling:** takedown accuracy %, submission attempts per 15 min, takedown defense %
+
+This immediately tells you which pillar has higher **variance** across fighters — high variance is a signal that it might be a stronger differentiator in wins.
+
+### 3. Aggregation
+This is very powerful here. You can aggregate by:
+- **Win method** (KO/TKO vs Submission vs Decision) — do submission winners have higher grappling efficiency scores?
+- **Weight class** — heavyweight fights are more striking-dominant; lightweight may differ
+- **Fighter archetype** — create groups like "striker", "grappler", "all-rounder" based on efficiency thresholds
+
+### 4. Data Visualization
+The key charts for your project:
+
+| Chart Type | Purpose |
+|---|---|
+| Histogram | Distribution of striking vs grappling efficiency scores |
+| Box plot | Compare efficiency scores across win/loss groups |
+| Scatter plot | Grappling efficiency vs Win rate — look for linear trend |
+| Heatmap (correlation matrix) | See which stats cluster together |
+| Bar chart | Average efficiency by win method (KO vs Sub vs Decision) |
+
+---
+
+## Additional EDA Methods Worth Adding
+
+### 5. Correlation Analysis
+Before your hypothesis tests, run a **Pearson correlation matrix** between all your features and the outcome variable (win rate or win/loss binary). This gives you a ranked preview of which metrics matter most — and will guide *which* hypothesis test to prioritize.
+
+### 6. Efficiency Score Engineering (Feature Construction)
+Rather than testing raw stats, build composite scores during EDA:
+- **Striking Efficiency Index** = (Strikes Landed / Strikes Attempted) × SLpM
+- **Grappling Efficiency Index** = (Takedowns Landed / Attempted) × TD_per_fight + Submission_attempts
+
+Then compare these engineered features against win rate. This is standard EDA practice before modeling.
+
+### 7. Win Rate Segmentation
+Split fighters into quartiles based on their striking efficiency score, then do the same for grappling. Plot win rates across those quartiles side by side. If striking Q4 fighters win significantly more than grappling Q4 fighters, that's visual evidence before you even run a t-test.
+
+### 8. Distribution Shape Analysis (Normality Check)
+This is directly connected to your hypothesis testing phase — before choosing between a **t-test vs Mann-Whitney U test**, check if your efficiency scores are normally distributed using:
+- Q-Q plots
+- Skewness/kurtosis values
+- Shapiro-Wilk test (small samples) or Kolmogorov-Smirnov (large)
+
+This makes EDA and hypothesis testing feel like one continuous pipeline, not two separate phases.
+
+---
+
+## Suggested EDA Flow for Your Project
+
+```
+Raw Data Inspection
+      ↓
+Descriptive Stats (per pillar, per weight class)
+      ↓
+Build Efficiency Scores (feature engineering)
+      ↓
+Correlation Matrix (striking/grappling features vs win rate)
+      ↓
+Visualizations (distributions, box plots, scatter plots)
+      ↓
+Win Rate Segmentation by Quartile
+      ↓
+Normality Check → feeds into your t-test decision
+      ↓
+Hypothesis Testing (t-test / Mann-Whitney)
+```
+
+The short answer: **yes, your four methods are appropriate**, and if you add correlation analysis, efficiency score engineering, and a normality check before your hypothesis tests, your EDA phase will be thorough and directly set up your statistical conclusions.
+
+
+QUESTION 2:
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+df_fights = pd.read_csv('C:\\Users\\merte\\PycharmProjects\\DSA210_2025_2026_Spring_Term_Project\\data.csv', encoding='latin1')
+df_details = pd.read_csv('C:\\Users\\merte\\PycharmProjects\\DSA210_2025_2026_Spring_Term_Project\\raw_fighter_details.csv', encoding='latin1')
+print("Data loaded successfully.")
+print(f"Total number of fights: {len(df_fights)}")
+all_fighters = pd.concat([df_fights['R_fighter'], df_fights['B_fighter']])
+experience_counts = all_fighters.value_counts().reset_index()
+experience_counts.columns = ['fighter_name', 'total_fights']
+experience_counts['Experience_Level'] = experience_counts['total_fights'].apply(
+    lambda x: 'Veteran' if x > 10 else 'Prospect'
+)
+df_details = df_details.merge(experience_counts, on='fighter_name', how='left')
+print("Enrichment complete: Experience levels have been added.")
+df_clean = df_fights[['Winner', 'B_avg_TD_pct', 'B_avg_SIG_STR_pct']].dropna().copy()
+df_clean['is_Blue_Winner'] = df_clean['Winner'].apply(lambda x: 1 if x == 'Blue' else 0)
+print("\nSummary Statistics")
+print(df_clean.describe())
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+sns.histplot(df_clean['B_avg_TD_pct'], kde=True, color='blue')
+plt.title('Distribution of Takedown Accuracy')
+plt.subplot(1, 2, 2)
+sns.histplot(df_clean['B_avg_SIG_STR_pct'], kde=True, color='red')
+plt.title('Distribution of Striking Accuracy')
+plt.show()
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='B_avg_SIG_STR_pct', y='B_avg_TD_pct', hue='Winner', data=df_clean, alpha=0.5)
+plt.title('Striking Accuracy vs. Takedown Accuracy')
+plt.xlabel('Striking Accuracy (%)')
+plt.ylabel('Takedown Accuracy (%)')
+plt.show()
+plt.figure(figsize=(7, 5))
+sns.countplot(x='Experience_Level', data=df_details, palette='viridis')
+plt.title('Count of Veteran vs. Prospect Fighters (Enriched Data)')
+plt.show()
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Winner', y='B_avg_TD_pct', data=df_clean, palette='pastel')
+plt.title('Takedown Accuracy Comparison by Winner')
+plt.show()
+print("\nHypothesis Testing")
+threshold = df_clean['B_avg_TD_pct'].median()
+high_grappling = df_clean[df_clean['B_avg_TD_pct'] >= threshold]['is_Blue_Winner']
+low_grappling = df_clean[df_clean['B_avg_TD_pct'] < threshold]['is_Blue_Winner']
+t_stat, p_val = stats.ttest_ind(high_grappling, low_grappling)
+print(f"T-Statistic: {t_stat:.4f}")
+print(f"P-Value: {p_val:.4f}")
+if p_val < 0.05:
+    print("Result: There is a statistically significant difference (Reject H0).")
+else:
+    print("Result: No significant difference found (Fail to reject H0).")
+df_details.to_csv('enriched_fighter_details.csv', index=False)
+print("\nAnalysis complete. Enriched data saved.")  I have done this code by taking reference  to my classes and recitations and especially for my goal of the project that I mentioned you is it okey for this part and I would like to ask you that my project runs in a correct way but Im not sure that the enrichment part is correct can you look up to it and say if this part have a problem but I think its good because it runs correctly please explain in short
+
+
+ANSWER :
+Your code is solid for this phase — the EDA and hypothesis testing sections are well-structured and appropriate for your goals.
+
+**On the enrichment part specifically**, it runs correctly but has a **logical problem** that doesn't cause an error but affects your results:
+
+```python
+# You're counting how many times a fighter appears across ALL fights in the dataset
+all_fighters = pd.concat([df_fights['R_fighter'], df_fights['B_fighter']])
+experience_counts = all_fighters.value_counts().reset_index()
+```
+
+The issue is that `value_counts()` here counts **total appearances in the dataset**, not actual career fights. So if your dataset only covers, say, 500 events, a fighter who had 15 fights total in UFC history might only appear 8 times in your data — and get labeled as "Prospect" incorrectly. The count is **dataset-relative**, not career-relative.
+
+**It's not a breaking problem** for your current phase since your main analysis focuses on striking/grappling efficiency, and you're not using Experience_Level in your hypothesis tests. But if you plan to use experience as a variable later, you should be aware of this caveat.
+
+A cleaner approach would be to sort fights by date first and use cumulative fight count per fighter, which gives you experience *at the time of each fight* rather than a static total — but that's more relevant for a future modeling phase.
+
+**Everything else looks good** — your t-test logic, the median split for high/low grappling, and your visualizations all align well with your stated goals. One small suggestion: consider adding a parallel t-test for striking (`B_avg_SIG_STR_pct`) in the same block so you can directly compare p-values between the two pillars, which is the core question of your project.
+
+
+QUESTION 3 :
+
+okay after these processes I would like to ask that I decide to drop the NaN datas with dropna() and I would like that its okey for my goal I think it will not effect the bias because the old fights have less statistics and less known varibales in short there is missing values to handle this I used dropna() . I chose to focus on complete data to ensure the statistical results are fitted and accurate but I think that I would have to deal with them with imputation techniques like use mean or median values is it correct approach what do you think. I think this is best approach
+
+
+ANSWER 3:
+
+Your reasoning is actually correct and `dropna()` is the **better choice** for your specific project. Here's why:
+
+**Your intuition about old fights is statistically valid.** Missing values in UFC data are not random — they're systematically missing because older fights simply weren't tracked with modern metrics. This is called **MCAR vs MNAR** in statistics:
+
+- **MCAR** (Missing Completely At Random) → imputation is safe
+- **MNAR** (Missing Not At Random) → imputation introduces bias
+
+Your case is **MNAR**. The data is missing *because* it's old, meaning imputing the mean/median would be filling in modern-era average statistics for fighters who fought in a completely different era of the sport — that's actually **more biased** than dropping them.
+
+**Why imputation would hurt your project specifically:**
+
+If you impute a mean takedown accuracy for a 2001 fight where no grappling stats were recorded, you're essentially inserting a fake data point into your hypothesis test comparing grappling vs striking efficiency. This directly corrupts the core question of your project.
+
+**The one thing you should do** is just report it transparently:
+
+```python
+print(f"Rows before dropna: {len(df_fights)}")
+df_clean = df_fights[['Winner', 'B_avg_TD_pct', 'B_avg_SIG_STR_pct']].dropna().copy()
+print(f"Rows after dropna: {len(df_clean)}")
+print(f"Dropped: {len(df_fights) - len(df_clean)} rows ({(len(df_fights) - len(df_clean))/len(df_fights)*100:.1f}%)")
+```
+
+This way in your project report you can justify the decision clearly — you're not losing random data, you're intentionally focusing on the **modern tracked era** of UFC where complete statistics exist, which actually strengthens your analysis rather than weakening it.
+
+QUESTION 4:
+
+Okay in the future if its needed I will not use the imputation techniques . Thanks for the analysis
+
+ANSWER :
+You're welcome! Just to summarize the key takeaway: **always check why data is missing before deciding how to handle it**. The missing mechanism (MCAR, MAR, or MNAR) should drive your decision, not just convenience.
+
+Good luck with the next phases of your project — hypothesis testing and eventually modeling should flow naturally from the clean foundation you've built.
