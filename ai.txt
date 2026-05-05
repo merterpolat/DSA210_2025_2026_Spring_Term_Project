@@ -208,3 +208,65 @@ ANSWER :
 You're welcome! Just to summarize the key takeaway: **always check why data is missing before deciding how to handle it**. The missing mechanism (MCAR, MAR, or MNAR) should drive your decision, not just convenience.
 
 Good luck with the next phases of your project — hypothesis testing and eventually modeling should flow naturally from the clean foundation you've built.
+
+
+
+
+
+ML PHASE PART : 
+
+QUESTION 1:
+
+I would like to ask you I have a data science project and my goal is look up to grappling vs striking and find out which one is dominant and I need some guideness in my project to choose best and optimal ML algorithms for this project In lessons we covered methods such as  Linear and Logistic Regression, Desicion Trees, K-Means, Hiearchical Clustering , DBSCAN, Eneasable learning , Random Forest which methods are suitible due to my data what is your suggestion for this part of the project which steps should I follow ?
+
+ANSWER :
+
+Based on your dataset and research question, here are my suggestions:
+For your supervised learning target, I recommend using Experience_Level (Veteran vs Prospect) as a proxy for long-term fighter success, since your fighter-level dataset contains career statistics rather than individual fight outcomes. Veterans and Prospects differ significantly in both grappling and striking metrics, which makes this a statistically justified and meaningful classification target.
+For the classification task, Logistic Regression is a strong starting point. It is interpretable, and its coefficients directly tell you which metrics (grappling or striking) push a fighter toward Veteran status. This is ideal for answering your research question quantitatively.
+Random Forest is my second recommendation. It handles non-linear relationships between features and the target, which is important in combat sports where interactions between metrics matter. More importantly, its feature_importances_ attribute gives you a ranked list of which metrics contribute most to the prediction, providing a direct answer to your grappling vs striking question.
+For unsupervised learning, K-Means Clustering is the most appropriate choice among the methods you covered. It will naturally segment fighters into style groups such as Grappler-Dominant, Striker-Dominant, and All-Rounder without using any labels. You can then compare the Veteran rates across these clusters to get a third angle on your research question.
+Regarding the other methods: Decision Trees alone tend to overfit, so Random Forest (which is an ensemble of trees) is strictly better for your purposes. Hierarchical Clustering and DBSCAN are less suitable here because your features are continuous and well-scaled, which favors K-Means. Linear Regression is not appropriate since your target is categorical.
+The steps I recommend are as follows. First, clean your data by converting percentage strings to floats, parsing height and weight into metric units, and filling missing values with column means. Second, engineer a Grappling_Striking_Ratio feature as a composite metric that captures each fighter's style in a single number. Third, encode categorical variables using Label Encoding for Experience_Level and One-Hot Encoding for Stance. Fourth, split your data 80/20 into train and test sets and apply StandardScaler fitted only on the training set to prevent data leakage. Fifth, train Logistic Regression and interpret the coefficients. Sixth, train Random Forest with cross-validated hyperparameter tuning and extract feature importances. Seventh, apply K-Means with the Elbow Method and Silhouette Score to determine the optimal number of clusters. Finally, evaluate all models using Accuracy, AUC, F1-Score, Confusion Matrix, and 5-Fold Cross-Validation.
+
+
+QUESTION 2:
+
+Can you please detail the data preparation part, which steps should I apply and which techniques should I use for my project's perfectness?
+
+ANSWER :
+
+Sure. Here is a detailed breakdown of the data preparation steps for your UFC project.
+The first step is handling missing values. Your dataset contains missing entries in columns like Height, Reach, and Stance. For numerical columns such as Height, Weight, Reach, and all performance metrics, I recommend mean imputation, which means filling missing values with the column average. This is the standard approach for continuous sports statistics because it preserves the overall distribution without distorting the data. Do not drop rows with missing values as you would lose too many fighters.
+The second step is unit conversion and parsing. Your raw data stores Height as strings like "5' 11"", Weight as "185 lbs.", and Reach as "76"". These need to be converted to numeric values. Convert Height to centimeters, Weight to kilograms, and Reach to centimeters. Similarly, columns like Str_Acc, TD_Acc, Str_Def, and TD_Def are stored as percentage strings like "57%" and must be converted to floats by removing the percent sign and dividing by 100.
+The third step is feature engineering. This is where you add real value to your project. Create a Grappling_Score by summing TD_Avg, TD_Acc, and Sub_Avg, and a Striking_Score by summing SLpM and Str_Acc. Then compute Grappling_Striking_Ratio as Grappling_Score divided by Striking_Score. A high ratio means the fighter relies more on grappling than striking. This engineered feature directly captures the core of your research question in a single number and will be one of the most important features in your models.
+The fourth step is encoding categorical variables. You have two categorical columns that need to be converted to numbers. For Experience_Level, use Label Encoding since it is an ordered variable where Prospect is 0 and Veteran is 1. For Stance, use One-Hot Encoding since it is a nominal variable with no natural order. Make sure to use drop_first=True in One-Hot Encoding to avoid the dummy variable trap, which causes multicollinearity in Logistic Regression.
+The fifth step is train and test splitting. Split your data into 80 percent training and 20 percent test sets using train_test_split with random_state=42 for reproducibility. Use stratify=y to ensure the Veteran to Prospect ratio is preserved in both splits. This is especially important given the class imbalance in your dataset where roughly 85 percent of fighters are Prospects and only 15 percent are Veterans.
+The sixth step is feature scaling. Apply StandardScaler to bring all numerical features to the same scale with mean zero and standard deviation one. This is critical for Logistic Regression which is sensitive to feature magnitudes. The most important rule here is to fit the scaler only on the training data using fit_transform, and then apply it to the test data using transform only. Fitting on the test data would cause data leakage and give you falsely optimistic results.
+The seventh step is addressing class imbalance. Since Veterans are only 15 percent of your dataset, a naive model would simply predict Prospect for everything and still achieve 85 percent accuracy without learning anything meaningful. To fix this, use class_weight='balanced' in both your Logistic Regression and Random Forest models. This automatically adjusts the loss function to penalize misclassifying the minority class more heavily, which significantly improves Veteran recall.
+Following these seven steps in order will give you a clean, well-structured dataset that is ready for all three models in your ML phase.
+
+
+QUESTION 3:
+My code works in a correct way but I have a problem in plotting. I think my problem is that I use plt.close() structure. I think I have to use plt.show() instead. Is it correct and should I replace them?
+
+
+ANSWER :
+
+Yes, you are correct. The issue is exactly that. In your current code, every plot ends with plt.savefig() followed by plt.close(). The plt.savefig() saves the figure to disk as a PNG file, and plt.close() immediately closes the figure object without displaying it on screen. This is why your plots are being saved to your project folder but are not appearing inside the notebook.
+The fix is straightforward. Replace every plt.close() with plt.show(). This way each figure will still be saved to disk via plt.savefig() and will also be rendered inline inside your Jupyter notebook.
+If you want to do this efficiently without changing each occurrence manually, use the Find and Replace feature in VS Code by pressing Ctrl+H, entering plt.close() in the Find field and plt.show() in the Replace field, and then clicking Replace All. This will update every instance in your notebook at once.
+Additionally, if you are working inside a Jupyter notebook in VS Code, you can also add %matplotlib inline at the very top of your first code cell, before all imports. This magic command tells the notebook to render all matplotlib figures inline automatically. However, replacing plt.close() with plt.show() is the more reliable and explicit solution for your case.
+
+
+QUESTION 4:
+
+And also I would like to ask, do I have to implement a Logistic Regression graph in my project? Is it effective?
+
+
+ANSWER :
+
+You already have two Logistic Regression visualizations in your project and they are both meaningful. The first is the Confusion Matrix, which shows how many fighters were correctly classified as Veteran or Prospect and how many were misclassified. The second is the Coefficients Bar Chart, which is arguably the most important visualization in your entire project because it directly shows which metrics have the strongest influence on the prediction, with positive coefficients pushing toward Veteran and negative coefficients pushing toward Prospect. This chart is your primary visual answer to the grappling vs striking research question from the Logistic Regression perspective.
+Beyond these two, you also have the ROC Curve which compares Logistic Regression and Random Forest side by side using AUC scores, giving a complete picture of both models' performance.
+So to directly answer your question, you do not need to add any additional Logistic Regression graphs. The three visualizations you already have cover interpretability through the coefficients chart, performance evaluation through the confusion matrix, and model comparison through the ROC curve. Adding more graphs beyond this would not contribute new information and could make your project look like it is padding the analysis rather than deepening it. What you have is complete and well-balanced.
+
